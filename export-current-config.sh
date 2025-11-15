@@ -9,7 +9,7 @@ echo ""
 
 CONFIG_FILE="group_vars/localhost.yml.exported"
 
-cat > "$CONFIG_FILE" << 'EOF'
+cat > "$CONFIG_FILE" << EOF
 ---
 # Exported configuration from current system
 # Generated on: $(date)
@@ -23,22 +23,35 @@ home_dir: "$HOME"
 user_group: $(id -gn)
 
 # ============================================
-# ROCm Configuration
+# NVIDIA/CUDA Configuration
 # ============================================
 EOF
 
-# Detect ROCm version
-if command -v rocm-smi &> /dev/null; then
-    ROCM_VERSION=$(rocm-smi --version 2>/dev/null | grep "ROCm version" | awk '{print $3}' | cut -d. -f1,2)
-    echo "rocm_version: \"${ROCM_VERSION:-6.2}\"" >> "$CONFIG_FILE"
+# Detect NVIDIA driver and CUDA version
+if command -v nvidia-smi &> /dev/null; then
+    NVIDIA_DRIVER=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null | head -1)
+    echo "nvidia_driver_version: ${NVIDIA_DRIVER%%.*}  # Detected: $NVIDIA_DRIVER" >> "$CONFIG_FILE"
 
-    # Detect GPU architecture
-    GPU_ARCH=$(rocminfo 2>/dev/null | grep "Name:" | grep "gfx" | head -1 | awk '{print $2}')
-    if [ -n "$GPU_ARCH" ]; then
-        echo "gpu_architecture: \"$GPU_ARCH\"" >> "$CONFIG_FILE"
+    # Detect GPU compute capability
+    COMPUTE_CAP=$(nvidia-smi --query-gpu=compute_cap --format=csv,noheader 2>/dev/null | head -1)
+    if [ -n "$COMPUTE_CAP" ]; then
+        echo "cuda_compute_capability: \"$COMPUTE_CAP\"" >> "$CONFIG_FILE"
     fi
+
+    # Detect GPU name
+    GPU_NAME=$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1)
+    echo "# GPU: $GPU_NAME" >> "$CONFIG_FILE"
 else
-    echo "rocm_version: \"6.2\"  # Not detected, using default" >> "$CONFIG_FILE"
+    echo "# NVIDIA driver not detected" >> "$CONFIG_FILE"
+    echo "nvidia_driver_version: 550  # Default" >> "$CONFIG_FILE"
+fi
+
+# Detect CUDA toolkit version
+if command -v nvcc &> /dev/null; then
+    CUDA_VERSION=$(nvcc --version 2>/dev/null | grep "release" | awk '{print $5}' | cut -d, -f1)
+    echo "cuda_version: \"$CUDA_VERSION\"  # Detected" >> "$CONFIG_FILE"
+else
+    echo "cuda_version: \"12.6\"  # Not detected, using default" >> "$CONFIG_FILE"
 fi
 
 cat >> "$CONFIG_FILE" << EOF
@@ -66,10 +79,10 @@ fi
 cat >> "$CONFIG_FILE" << EOF
 
 # ============================================
-# SD Forge ROCm Configuration
+# SD Forge CUDA Configuration
 # ============================================
-forge_install_dir: "$HOME/llm/sd-webui-forge-classic"
-forge_conda_env: "forge-rocm"
+forge_install_dir: "$HOME/llm/sd-webui-forge"
+forge_conda_env: "forge-cuda"
 forge_models_dir: "{{ forge_install_dir }}/models"
 
 # ============================================
@@ -92,9 +105,13 @@ echo ""
 echo "Detected configuration:"
 echo "  User: $USER"
 echo "  Home: $HOME"
-if command -v rocm-smi &> /dev/null; then
-    echo "  ROCm: ${ROCM_VERSION:-detected}"
-    echo "  GPU: ${GPU_ARCH:-unknown}"
+if command -v nvidia-smi &> /dev/null; then
+    echo "  NVIDIA Driver: ${NVIDIA_DRIVER:-detected}"
+    echo "  GPU: ${GPU_NAME:-unknown}"
+    echo "  Compute Capability: ${COMPUTE_CAP:-unknown}"
+fi
+if command -v nvcc &> /dev/null; then
+    echo "  CUDA: ${CUDA_VERSION:-detected}"
 fi
 if command -v conda &> /dev/null; then
     echo "  Conda: $(conda --version)"

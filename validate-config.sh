@@ -59,7 +59,7 @@ done
 # Check for role directories
 echo ""
 echo "Checking roles..."
-for role in base-system rocm conda forge-rocm desktop-preferences; do
+for role in base-system nvidia-cuda conda forge-cuda desktop-preferences; do
     if [ -d "roles/$role/tasks" ]; then
         if [ -f "roles/$role/tasks/main.yml" ]; then
             echo -e "${GREEN}✓ roles/$role${NC}"

@@ -10,6 +10,30 @@ Automated Ansible playbooks for setting up a fresh Ubuntu installation with NVID
 
 ## Quick Start
 
+### Option A: Interactive Setup (Recommended)
+
+```bash
+# Clone this repository
+git clone https://github.com/gmtrash/forge-neo-nvidia.git
+cd forge-neo-nvidia
+
+# Edit configuration
+vim group_vars/localhost.yml  # Update username and email at minimum
+
+# Validate configuration
+./validate-config.sh
+
+# Run interactive setup
+./quick-start.sh
+```
+
+The interactive script will guide you through:
+- Installing Ansible if needed
+- Choosing deployment options (full, dry-run, or selective)
+- Running the playbook with proper flags
+
+### Option B: Manual Setup
+
 ### 1. Install Ansible on Fresh Ubuntu
 
 ```bash
@@ -20,8 +44,8 @@ sudo apt install -y ansible git
 ### 2. Clone this repository
 
 ```bash
-git clone <your-repo-url> forge-neo
-cd forge-neo
+git clone https://github.com/gmtrash/forge-neo-nvidia.git
+cd forge-neo-nvidia
 ```
 
 ### 3. Configure your settings
@@ -39,9 +63,12 @@ username: your_username  # Change this!
 git_user_email: "your.email@example.com"  # Change this!
 ```
 
-### 4. Run the playbook
+### 4. Validate and run
 
 ```bash
+# Validate configuration
+./validate-config.sh
+
 # Dry run (check mode)
 ansible-playbook main.yml --check
 
@@ -117,12 +144,18 @@ Access WebUI at: **http://localhost:7860**
 ```
 forge-neo/
 ├── README.md                    # This file
+├── GPU-PASSTHROUGH.md           # GPU passthrough guide for VMs
 ├── main.yml                     # Main playbook
 ├── update.yml                   # Update existing installation
 ├── backup.yml                   # Create backups
 ├── test.yml                     # Test configuration
 ├── ansible.cfg                  # Ansible configuration
 ├── inventory.ini                # Inventory file
+├── quick-start.sh               # Interactive deployment script
+├── validate-config.sh           # Pre-flight configuration checks
+├── export-current-config.sh     # Export system config to YAML
+├── setup-nvidia-passthrough.sh  # Configure NVIDIA GPU passthrough
+├── fix-vfio-permissions.sh      # Fix VFIO device permissions
 ├── group_vars/
 │   └── localhost.yml            # Configuration variables
 └── roles/
@@ -343,19 +376,36 @@ Use a specific driver version:
 nvidia_driver_version: 560  # Latest driver
 ```
 
-## Testing in a VM
+## GPU Passthrough for VMs
 
-Test before running on your main system:
+If you want to run this in a VM with NVIDIA GPU passthrough:
+
+### On the Host Machine
+
+1. **Configure GPU passthrough**:
+```bash
+sudo ./setup-nvidia-passthrough.sh
+# Reboot required
+```
+
+2. **Fix VFIO permissions**:
+```bash
+sudo ./fix-vfio-permissions.sh
+# Log out and back in
+```
+
+3. **Create VM with GPU attached** (using virt-manager or virsh)
+
+### Inside the VM
 
 ```bash
-# Using VirtualBox, VMware, etc.
-# Create fresh Ubuntu 22.04 VM with GPU passthrough
-# Then inside VM:
-git clone <repo> forge-neo
-cd forge-neo
-ansible-playbook main.yml
+git clone https://github.com/gmtrash/forge-neo-nvidia.git
+cd forge-neo-nvidia
+./quick-start.sh
 sudo reboot
 ```
+
+See [GPU-PASSTHROUGH.md](GPU-PASSTHROUGH.md) for detailed instructions.
 
 ## Post-Installation Info Files
 

@@ -6,7 +6,7 @@ set -e
 
 echo "============================================"
 echo "Ansible Deployment Quick Start"
-echo "Ubuntu Desktop + SD Forge ROCm"
+echo "Ubuntu Desktop + SD Forge CUDA"
 echo "============================================"
 echo ""
 
@@ -46,9 +46,9 @@ fi
 
 echo "This script will configure your system with:"
 echo "  - Base system packages"
-echo "  - AMD ROCm for GPU acceleration"
+echo "  - NVIDIA drivers and CUDA toolkit for GPU acceleration"
 echo "  - Conda/Miniforge"
-echo "  - Stable Diffusion WebUI Forge Classic (ROCm)"
+echo "  - Stable Diffusion WebUI Forge (CUDA)"
 echo "  - Desktop preferences and shortcuts"
 echo ""
 
@@ -71,8 +71,8 @@ echo ""
 echo "Choose deployment option:"
 echo "  1) Full deployment (everything)"
 echo "  2) Dry run (check mode - no changes)"
-echo "  3) ROCm only"
-echo "  4) SD Forge only (assumes ROCm/conda already installed)"
+echo "  3) NVIDIA/CUDA only"
+echo "  4) SD Forge only (assumes NVIDIA/CUDA/conda already installed)"
 echo "  5) Custom (you'll specify tags)"
 echo ""
 
@@ -91,8 +91,8 @@ case $choice in
         ;;
     3)
         echo ""
-        echo -e "${GREEN}Installing ROCm only...${NC}"
-        ansible-playbook main.yml --tags "base,rocm" --ask-become-pass
+        echo -e "${GREEN}Installing NVIDIA/CUDA only...${NC}"
+        ansible-playbook main.yml --tags "base,nvidia" --ask-become-pass
         ;;
     4)
         echo ""
@@ -101,7 +101,7 @@ case $choice in
         ;;
     5)
         echo ""
-        echo "Available tags: base, rocm, conda, forge, desktop"
+        echo "Available tags: base, nvidia, conda, forge, desktop"
         read -p "Enter tags (comma-separated): " tags
         ansible-playbook main.yml --tags "$tags" --ask-become-pass
         ;;
@@ -117,8 +117,9 @@ echo -e "${GREEN}Deployment complete!${NC}"
 echo "============================================"
 echo ""
 echo "Next steps:"
-echo "  1. Reboot your system (recommended for ROCm)"
-echo "  2. Verify ROCm: rocm-smi --showproductname"
-echo "  3. Check installation log: cat ~/.ansible-deployment-log"
-echo "  4. Launch Forge: forge-launch (or cd ~/llm/sd-webui-forge-classic && ./launch-rocm.sh)"
+echo "  1. Reboot your system (REQUIRED for NVIDIA driver)"
+echo "  2. Verify NVIDIA: nvidia-smi"
+echo "  3. Verify CUDA: nvcc --version"
+echo "  4. Check installation log: cat ~/.ansible-deployment-log"
+echo "  5. Launch Forge: forge-launch (or cd ~/llm/sd-webui-forge && ./launch-cuda.sh)"
 echo ""
