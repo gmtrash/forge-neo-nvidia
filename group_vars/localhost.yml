@@ -49,7 +49,7 @@ conda_auto_activate_base: false
 # ============================================
 
 # Repository settings
-forge_repo_url: "https://github.com/lllyasviel/stable-diffusion-webui-forge"
+forge_repo_url: "https://github.com/6Morpheus6/forge-neo"
 forge_branch: "main"
 forge_install_dir: "{{ home_dir }}/llm/sd-webui-forge"
 
